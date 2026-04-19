@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-node worker.js &
+node lib/worker.js &
 exec node server.js
