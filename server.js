@@ -11,7 +11,7 @@ const {
   getExt,
   buildOutputFileName,
   buildLockKey
-} = require("./utils");
+} = require("./lib/utils");
 
 ensureDirs();
 
