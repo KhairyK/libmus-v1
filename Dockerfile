@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 RUN apt-get update \
   && apt-get install -y ffmpeg \
@@ -11,7 +11,9 @@ RUN npm install --omit=dev
 
 COPY . .
 
+RUN chmod +x start.sh
+
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["bash", "start.sh"]
