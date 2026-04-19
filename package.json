@@ -1,5 +1,5 @@
 {
-  "name": "libmus-audi-converter",
+  "name": "libmus-audio-converter",
   "version": "0.0.0-v1",
   "main": "server.js",
   "type": "commonjs",
