@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: libmus-audio-converter
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: REDIS_URL
+        sync: false
+      - key: ENABLE_LOUDNORM
+        value: "true"
+      - key: WORKER_CONCURRENCY
+        value: "1"
+      - key: MAX_UPLOAD_BYTES
+        value: "52428800"
