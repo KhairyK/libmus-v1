@@ -11,21 +11,20 @@ const {
   getExt,
   buildOutputFileName,
   buildLockKey
-} = require("./lib/utils");
-
-require("./worker");
+} = require("./utils");
 
 ensureDirs();
 
 const app = express();
+app.use(express.json());
 
 const allowedExts = new Set(["mp3", "wav", "ogg", "m4a", "flac"]);
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, INPUT_DIR),
   filename: (req, file, cb) => {
-    const stamp = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const ext = getExt(file.originalname) || "bin";
+    const stamp = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     cb(null, `${stamp}.${ext}`);
   }
 });
@@ -40,8 +39,8 @@ const upload = multer({
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
-    service: "audio flac queue",
-    mode: "railway"
+    service: "audio-flac-render",
+    message: "running"
   });
 });
 
@@ -77,22 +76,12 @@ app.post("/api/jobs", upload.single("musicFile"), async (req, res) => {
       });
     }
 
-    const lock = await connection.set(lockKey, "1", "NX", "EX", 24 * 60 * 60);
-    if (!lock) {
+    const lockResult = await connection.set(lockKey, "1", "NX", "EX", 24 * 60 * 60);
+    if (!lockResult) {
       await safeUnlink(req.file.path);
       return res.status(409).json({
         status: "error",
-        message: "File is already being processed or already exists."
-      });
-    }
-
-    const existingJob = await queue.getJob(outputFileName);
-    if (existingJob) {
-      await connection.del(lockKey);
-      await safeUnlink(req.file.path);
-      return res.status(409).json({
-        status: "error",
-        message: "Job with this filename already exists."
+        message: "File is already queued or being processed."
       });
     }
 
@@ -149,12 +138,7 @@ app.get("/api/jobs/:jobId", async (req, res) => {
       progress: job.progress,
       data: job.data,
       returnvalue: job.returnvalue || null,
-      failedReason: job.failedReason || null,
-      timestamps: {
-        createdAt: job.timestamp,
-        processedOn: job.processedOn || null,
-        finishedOn: job.finishedOn || null
-      }
+      failedReason: job.failedReason || null
     });
   } catch (err) {
     return res.status(500).json({
@@ -194,5 +178,5 @@ app.use((req, res) => {
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log("Server listening on", port);
 });
